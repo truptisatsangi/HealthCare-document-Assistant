@@ -1,9 +1,18 @@
-import logging
-
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pypdf import PdfReader
 from io import BytesIO
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_core.vectorstores import InMemoryVectorStore
+from langchain_huggingface import HuggingFaceEmbeddings
+
+import getpass
+import os
+import logging
+
+if not os.environ.get("OPENAI_API_KEY"):
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter API key for OpenAI: ")
+
 
 app = FastAPI()
 logger = logging.getLogger(__name__)
@@ -33,12 +42,10 @@ async def upload_pdf(file: UploadFile):
 
 
 # Load and Chunk the data
-@app.post("/chunks")
-async def make_chunks(file: UploadFile = File(...)):
+def make_chunks(text):
     try:
-        result  = await upload_pdf(file)
         text_splitter = RecursiveCharacterTextSplitter(chunk_size = 500, chunk_overlap= 100)
-        all_chunks = text_splitter.split_text(result["text"])
+        all_chunks = text_splitter.create_documents([text])
     
     except HTTPException:
         raise
@@ -50,6 +57,23 @@ async def make_chunks(file: UploadFile = File(...)):
         "num_chunks": len(all_chunks),
         "chunks": all_chunks
     }
+
+
+@app.post("/embedding")
+async def embedding(file: UploadFile = File(...)):
+    
+    result  = await upload_pdf(file)
+    chunks = make_chunks(result["text"])
+    embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-mpnet-base-v2",
+    encode_kwargs={"normalize_embeddings": True},
+   )
+    # embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    vector_store = InMemoryVectorStore(embeddings)
+    document_Ids = vector_store.add_documents(documents=chunks["chunks"])
+    print(document_Ids)
+    return document_Ids
+
 
 
 

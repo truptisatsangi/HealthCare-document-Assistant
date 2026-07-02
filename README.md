@@ -8,7 +8,7 @@ Chunk -> Done
 
 ↓
 
-Embedding
+Embedding -> Done
 
 ↓
 
