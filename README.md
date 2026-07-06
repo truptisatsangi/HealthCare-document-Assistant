@@ -43,26 +43,27 @@ NOTE: For now this application is supporting only a single user and a single hos
 
 ## Now steps to achieve the phase 2
 
-1. Clean project structure (Done)
-2. Define models & configuration
+1. Clean project structure
+2. Define models & configuration 
     - Pydantic models
     - config.py
     - Environment variables
 
 3. Implement Services
 
-    - PDF Service
+    - Report Service
     - Chunking Service
     - Embedding Service
     - Retrieval Service
+    - Prompt Service
     - LLM Service
 
 4. Create API routes
 
     - POST /upload
     - POST /ask
+    - GET /documents
     - GET /health
-    
 
 5. Integrate Vector DB + RAG + LLM
 
